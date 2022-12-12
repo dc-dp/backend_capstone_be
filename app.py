@@ -15,9 +15,11 @@ from models.enrolled_devices import EnrolledDevices
 from models.assets import Assets
 from models.snipe_it_site import SnipeItSite
 from models.mdm_site import MdmSite
-from models.enrolled_assets_xref import EnrolledDevicesAssetsXRef
+
+# from models.enrolled_assets_xref import EnrolledDevicesAssetsXRef
 from models.enrolled_mdm_xref import EnrolledDevicesMdmSiteXRef
-from models.organizations_mdm_xref import OrganizationsMdmSiteXRef
+
+# from models.organizations_mdm_xref import OrganizationsMdmSiteXRef
 
 from util.validate_uuid4 import validate_uuid4
 from util.foundation_utils import strip_phone
@@ -183,7 +185,8 @@ app.register_blueprint(routes.images)
 app.register_blueprint(routes.orgs)
 app.register_blueprint(routes.search)
 app.register_blueprint(routes.users)
-
+app.register_blueprint(routes.mdmsite)
+app.register_blueprint(routes.snipeit)
 
 if __name__ == "__main__":
     create_all()

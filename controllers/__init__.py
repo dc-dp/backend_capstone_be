@@ -35,3 +35,6 @@ from .contacts_controller import (
     read_contacts,
 )
 from .enrolled_devices_controller import enrolled_devices_get
+
+from .mdm_site_controller import mdmsite_add
+from .snipeit_controller import snipeit_add

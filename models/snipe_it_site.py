@@ -17,8 +17,7 @@ class SnipeItSite(db.Model):
     url = db.Column(db.String(), nullable=False)
     name = db.Column(db.String(), nullable=False, unique=True)
 
-    def __init__(self, site_id, api_token, url, name):
-        self.site_id = site_id
+    def __init__(self, api_token, url, name):
         self.api_token = api_token
         self.url = url
         self.name = name
@@ -29,5 +28,5 @@ class SnipeItSiteSchema(ma.Schema):
         fields = ["site_id", "api_token", "url", "name"]
 
 
-mdm_site_schema = SnipeItSiteSchema()
-mdm_sites_schema = SnipeItSiteSchema(many=True)
+snipeit_site_schema = SnipeItSiteSchema()
+snipeit_sites_schema = SnipeItSiteSchema(many=True)

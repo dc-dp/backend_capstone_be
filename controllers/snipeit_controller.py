@@ -2,11 +2,7 @@ from datetime import datetime
 from flask import jsonify
 import flask
 from db import db
-from models.mdm_site import (
-    MdmSite,
-    mdm_site_schema,
-    mdm_sites_schema,
-)
+from models.snipe_it_site import SnipeItSite, snipeit_site_schema, snipeit_sites_schema
 import json
 from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
 from util.foundation_utils import strip_phone
@@ -14,42 +10,37 @@ from util.validate_uuid4 import validate_uuid4
 
 
 @authenticate
-def mdmsite_add(req: flask.Request) -> flask.Response:
+def snipeit_add(req: flask.Request) -> flask.Response:
     # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
 
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")
     name = post_data.get("name")
-    org_id = post_data.get("org_id")
 
-    mdm_site = MdmSite(api_token, url, name, org_id)
+    snipeit_site = SnipeItSite(api_token, url, name)
 
-    db.session.add(mdm_site)
+    db.session.add(snipeit_site)
     db.session.commit()
 
-    return jsonify(mdm_site_schema.dump(mdm_site)), 201
+    return jsonify(snipeit_site_schema.dump(snipeit_site)), 201
 
 
-# @authenticate_return_auth
-# def enrolled_devices_get(req: flask.Request, auth_info) -> flask.Response:
-#     all_devices = []
+@authenticate_return_auth
+def snipeit_get(req: flask.Request, auth_info) -> flask.Response:
+    all_sites = []
 
-#     # if auth_info.user.role != "super-admin":
-#     #     all_organizations = (
-#     #         db.session.query(EnrolledDevices)
-#     #         .filter(Organizations.org_id == auth_info.user.org_id)
-#     #         .order_by(Organizations.name.asc())
-#     #         .all()
-#     #     )
-#     # else:
-#     all_devices = (
-#         db.session.query(EnrolledDevices)
-#         .order_by(EnrolledDevices.serial_number.asc())
-#         .all()
-#     )
+    # if auth_info.user.role != "super-admin":
+    #     all_organizations = (
+    #         db.session.query(EnrolledDevices)
+    #         .filter(Organizations.org_id == auth_info.user.org_id)
+    #         .order_by(Organizations.name.asc())
+    #         .all()
+    #     )
+    # else:
+    all_sites = db.session.query(SnipeItSite).all()
 
-#     return jsonify(organizations_schema.dump(all_devices))
+    return jsonify(snipeit_sites_schema.dump(all_sites))
 
 
 # @authenticate_return_auth

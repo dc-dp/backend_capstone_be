@@ -2,10 +2,16 @@ from datetime import datetime
 from flask import jsonify
 import flask
 from db import db
-from models.mdm_site import (
-    MdmSite,
-    mdm_site_schema,
-    mdm_sites_schema,
+from models.snipe_it_site import (
+    SnipeItSite,
+    snipeit_site_schema,
+    snipeit_sites_schema,
+)
+from snipeit_controller import snipeit_get
+from models.assets import (
+    Assets,
+    asset_schema,
+    assets_schema,
 )
 import json
 from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
@@ -14,9 +20,9 @@ from util.validate_uuid4 import validate_uuid4
 
 
 @authenticate
-def mdmsite_add(req: flask.Request) -> flask.Response:
+def assets_add(req: flask.Request) -> flask.Response:
     # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
-
+    site_id = snipeit_get()
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")

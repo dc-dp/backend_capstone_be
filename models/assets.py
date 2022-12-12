@@ -13,20 +13,20 @@ class Assets(db.Model):
         unique=True,
         nullable=False,
     )
-    serial_number = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("SnipeItSite.site_id"), nullable=False
+    site_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("SnipeItSite.site_id"),
+        nullable=False,
+        unique=True,
     )
-    site_id = db.Column(db.String(), nullable=False, unique=True)
+    serial_number = db.Column(db.String(), nullable=False, unique=True)
     make = db.Column(db.String())
     model_num = db.Column(db.String())
     deployed = db.Column(db.Boolean())
     assigned_to = db.Column(db.String())
     asset_tag = db.Column(db.Integer())
 
-    def __init__(
-        self, asset_id, serial_number, site_id, make, deployed, assigned_to, asset_tag
-    ):
-        self.asset_id = asset_id
+    def __init__(self, serial_number, site_id, make, deployed, assigned_to, asset_tag):
         self.serial_number = serial_number
         self.site_id = site_id
         self.make = make

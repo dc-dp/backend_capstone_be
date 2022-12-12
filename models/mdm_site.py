@@ -20,14 +20,13 @@ class MdmSite(db.Model):
         UUID(as_uuid=True),
         db.ForeignKey("Organizations.org_id"),
         nullable=False,
-        unique=True,
     )
 
-    def __init__(self, mdm_site_id, api_token, url, name):
-        self.mdm_site_id = mdm_site_id
+    def __init__(self, api_token, url, name, org_id):
         self.api_token = api_token
         self.url = url
         self.name = name
+        self.org_id = org_id
 
 
 class MdmSiteSchema(ma.Schema):

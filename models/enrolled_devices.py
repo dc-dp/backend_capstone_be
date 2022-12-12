@@ -21,10 +21,7 @@ class EnrolledDevices(db.Model):
     last_seen = db.Column(db.String())
     dep_profile_status = db.Column(db.String())
 
-    def __init__(
-        self, device_id, serial_number, enrollment_status, last_seen, dep_profile_status
-    ):
-        self.device_id = device_id
+    def __init__(self, serial_number, enrollment_status, last_seen, dep_profile_status):
         self.serial_number = serial_number
         self.enrollment_status = enrollment_status
         self.last_seen = last_seen
