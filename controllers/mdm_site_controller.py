@@ -1,16 +1,18 @@
 from datetime import datetime
 from flask import jsonify
 import flask
-from db import db
+from db import db, populate_object
 from models.mdm_site import (
     MdmSite,
     mdm_site_schema,
     mdm_sites_schema,
 )
+from models.enrolled_devices import EnrolledDevices
 import json
 from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
 from util.foundation_utils import strip_phone
 from util.validate_uuid4 import validate_uuid4
+import requests
 
 
 @authenticate
@@ -29,6 +31,83 @@ def mdmsite_add(req: flask.Request) -> flask.Response:
     db.session.commit()
 
     return jsonify(mdm_site_schema.dump(mdm_site)), 201
+
+
+@authenticate_return_auth
+def mdmsite_get_all(req: flask.Request, auth_info) -> flask.Response:
+    # print(f"LOOK HERE: >>>>>>>>>>>> ({vars(auth_info)})")
+
+    all_sites = []
+    all_sites = (
+        db.session.query(MdmSite).filter(auth_info.user.org_id == MdmSite.org_id).all()
+    )
+
+    return jsonify(mdm_sites_schema.dump(all_sites))
+
+
+@authenticate_return_auth
+def mdmsite_get_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+
+    site = (
+        db.session.query(MdmSite)
+        .filter(
+            (auth_info.user.org_id == MdmSite.org_id) and (MdmSite.site_id == site_id)
+        )
+        .one()
+    )
+
+    return jsonify(mdm_site_schema.dump(site))
+
+
+@authenticate_return_auth
+def mdmsite_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+
+    site = db.session.query(MdmSite).filter((MdmSite.mdm_site_id == site_id)).first()
+
+    site = mdm_site_schema.dump(site)
+    request_url = f"{site['url']}/v1/devices"
+    api_token = site["api_token"]
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    data = "{}"
+
+    # url = "https://mds.devpipeline.org:8443/v1/devices"
+    auth = ("micromdm", api_token)
+    devices = requests.post(
+        url=request_url,
+        auth=auth,
+        data=data,
+        headers=headers,
+    )
+    device_json = devices.json()["devices"]
+    count = 0
+    for device in device_json:
+        print(f"DEVICE JSON: {device_json}")
+        device["device_id"] = device.pop("udid")
+        existing = (
+            db.session.query(EnrolledDevices)
+            .filter(EnrolledDevices.serial_number == device["serial_number"])
+            .first()
+        )
+
+        if existing:
+            populate_object(existing, device)
+
+        else:
+            db.session.add(
+                EnrolledDevices(
+                    device["device_id"],
+                    device["serial_number"].upper(),
+                    device["enrollment_status"],
+                    device["last_seen"],
+                    device["dep_profile_status"],
+                )
+            )
+        db.session.commit()
+        count += 1
+    return jsonify(f"Sucessfully synced {count} devices")
 
 
 # @authenticate_return_auth

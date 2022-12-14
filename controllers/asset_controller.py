@@ -1,61 +1,141 @@
 from datetime import datetime
 from flask import jsonify
 import flask
-from db import db
-from models.snipe_it_site import (
-    SnipeItSite,
-    snipeit_site_schema,
-    snipeit_sites_schema,
-)
-from snipeit_controller import snipeit_get
-from models.assets import (
-    Assets,
-    asset_schema,
-    assets_schema,
-)
+from db import db, populate_object
+from models.snipe_it_site import SnipeItSite, snipeit_site_schema, snipeit_sites_schema
 import json
 from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
 from util.foundation_utils import strip_phone
 from util.validate_uuid4 import validate_uuid4
+import requests
+from models.assets import Assets
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 
 
 @authenticate
-def assets_add(req: flask.Request) -> flask.Response:
+def asset_add(req: flask.Request) -> flask.Response:
     # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
-    site_id = snipeit_get()
+
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")
     name = post_data.get("name")
     org_id = post_data.get("org_id")
 
-    mdm_site = MdmSite(api_token, url, name, org_id)
+    asset_site = SnipeItSite(api_token, url, name, org_id)
 
-    db.session.add(mdm_site)
+    db.session.add(asset_site)
     db.session.commit()
 
-    return jsonify(mdm_site_schema.dump(mdm_site)), 201
+    return jsonify(snipeit_site_schema.dump(asset_site)), 201
 
 
-# @authenticate_return_auth
-# def enrolled_devices_get(req: flask.Request, auth_info) -> flask.Response:
-#     all_devices = []
+@authenticate_return_auth
+def asset_get_all(req: flask.Request, auth_info) -> flask.Response:
+    all_sites = []
+    all_sites = (
+        db.session.query(SnipeItSite)
+        .filter(auth_info.user.org_id == SnipeItSite.org_id)
+        .all()
+    )
 
-#     # if auth_info.user.role != "super-admin":
-#     #     all_organizations = (
-#     #         db.session.query(EnrolledDevices)
-#     #         .filter(Organizations.org_id == auth_info.user.org_id)
-#     #         .order_by(Organizations.name.asc())
-#     #         .all()
-#     #     )
-#     # else:
-#     all_devices = (
-#         db.session.query(EnrolledDevices)
-#         .order_by(EnrolledDevices.serial_number.asc())
-#         .all()
-#     )
+    return jsonify(snipeit_sites_schema.dump(all_sites))
 
-#     return jsonify(organizations_schema.dump(all_devices))
+
+@authenticate_return_auth
+def asset_get_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+
+    site = (
+        db.session.query(SnipeItSite)
+        .filter(
+            (auth_info.user.org_id == SnipeItSite.org_id)
+            and (SnipeItSite.site_id == site_id)
+        )
+        .one()
+    )
+
+    return jsonify(snipeit_site_schema.dump(site))
+
+
+@authenticate_return_auth
+def asset_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+
+    site = (
+        db.session.query(SnipeItSite)
+        .filter(
+            (auth_info.user.org_id == SnipeItSite.org_id)
+            and (SnipeItSite.site_id == site_id)
+        )
+        .one()
+    )
+
+    site = snipeit_site_schema.dump(site)
+
+    request_url = f"{site['url']}/api/v1/hardware"
+    api_token = site["api_token"]
+
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    assets = requests.get(request_url, headers=headers)
+    assets_json = assets.json()["rows"]
+
+    with open("assets.json", "w") as outfile:
+        json.dump(assets_json, outfile)
+    count = 0
+    for asset in assets_json:
+        if not asset["manufacturer"]:
+            continue
+
+        if asset["manufacturer"]["name"].title() != "Apple":
+            continue
+
+        if not asset["assigned_to"]:
+            asset["assigned_to"] = {"first_name": "", "last_name": ""}
+        new_asset = {
+            "asset_tag": asset["asset_tag"],
+            "serial_number": asset["serial"].upper(),
+            "make": asset["manufacturer"]["name"],
+            "model_num": asset["model_number"],
+            "model_name": asset["model"]["name"],
+            "deployed": asset["status_label"]["status_meta"] == "deployed",
+            "assigned_to": (
+                f"{asset['assigned_to']['last_name']}, {asset['assigned_to']['first_name']}"
+            ),
+            "site_id": site_id,
+        }
+        if not asset["assigned_to"]["first_name"]:
+            new_asset["assigned_to"] = ""
+        existing = (
+            db.session.query(Assets)
+            .filter(Assets.serial_number == new_asset["serial_number"])
+            .first()
+        )
+
+        if existing:
+            populate_object(existing, new_asset)
+
+        else:
+            db.session.add(
+                Assets(
+                    new_asset["serial_number"],
+                    new_asset["site_id"],
+                    new_asset["make"],
+                    new_asset["model_num"],
+                    new_asset["model_name"],
+                    new_asset["deployed"],
+                    new_asset["assigned_to"],
+                    new_asset["asset_tag"],
+                )
+            )
+        db.session.commit()
+        count += 1
+
+    return jsonify(f"Sucessfully synced {count} devices")
 
 
 # @authenticate_return_auth

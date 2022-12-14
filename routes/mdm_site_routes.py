@@ -9,19 +9,24 @@ def mdmsite_add() -> Response:
     return controllers.mdmsite_add(request)
 
 
-@mdmsite.route("/user/update", methods=["POST"])
-def mdmsite_update() -> Response:
-    return controllers.mdmsite_update(request)
-
-
-@mdmsite.route("/user/get", methods=["GET"])
+@mdmsite.route("/mdmsite/get", methods=["GET"])
 def mdmsite_get_all() -> Response:
     return controllers.mdmsite_get_all(request)
 
 
-@mdmsite.route("/user/get/<mdmsite_id>", methods=["GET"])
+@mdmsite.route("/mdmsite/get/<mdmsite_id>", methods=["GET"])
 def mdmsite_get_by_id(mdmsite_id) -> Response:
     return controllers.mdmsite_get_by_id(request, mdmsite_id)
+
+
+@mdmsite.route("/mdmsite/sync/<mdmsite_id>", methods=["GET"])
+def mdmsite_sync_by_id(mdmsite_id) -> Response:
+    return controllers.mdmsite_sync_by_id(request, mdmsite_id)
+
+
+@mdmsite.route("/user/update", methods=["POST"])
+def mdmsite_update() -> Response:
+    return controllers.mdmsite_update(request)
 
 
 @mdmsite.route("/user/get/me", methods=["GET"])

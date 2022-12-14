@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import jsonify
+import json
 import flask
 from db import db
 from models.enrolled_devices import (
@@ -15,37 +16,39 @@ from models.organizations import (
 from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
 from util.foundation_utils import strip_phone
 from util.validate_uuid4 import validate_uuid4
+from controllers.mdm_site_controller import mdmsite_get_all, mdmsite_sync_by_id
+from controllers.asset_controller import asset_get_all, asset_sync_by_id
 
 
-@authenticate
-def device_sync():
-    # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
+@authenticate_return_auth
+def enrolled_devices_sync(req: flask.Request, auth_info) -> flask.Response:
+    all_mdm_sites = mdmsite_get_all(req, auth_info=auth_info)
+    all_asset_sites = asset_get_all(req, auth_info=auth_info)
 
-    stripped_phone = strip_phone(phone)
-    org_data = Organizations(
-        name, address, city, state, zip_code, stripped_phone, created_date, active
-    )
+    mdm_site = all_mdm_sites.get_json("response")
+    asset_site = all_asset_sites.get_json("response")
+    for site in mdm_site:
+        site_id = site["mdm_site_id"]
+        mdmsite_sync_by_id(req, site_id, auth_info=auth_info)
+
+    for site in asset_site:
+        site_id = site["site_id"]
+        asset_sync_by_id(req, site_id, auth_info=auth_info)
+
+    return jsonify("Sites Synced Successully")
 
 
 @authenticate_return_auth
 def enrolled_devices_get(req: flask.Request, auth_info) -> flask.Response:
     all_devices = []
 
-    # if auth_info.user.role != "super-admin":
-    #     all_organizations = (
-    #         db.session.query(EnrolledDevices)
-    #         .filter(Organizations.org_id == auth_info.user.org_id)
-    #         .order_by(Organizations.name.asc())
-    #         .all()
-    #     )
-    # else:
     all_devices = (
         db.session.query(EnrolledDevices)
         .order_by(EnrolledDevices.serial_number.asc())
         .all()
     )
 
-    return jsonify(organizations_schema.dump(all_devices))
+    return jsonify(enrolled_devices_schema.dump(all_devices))
 
 
 # @authenticate_return_auth

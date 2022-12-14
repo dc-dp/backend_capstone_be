@@ -186,7 +186,8 @@ app.register_blueprint(routes.orgs)
 app.register_blueprint(routes.search)
 app.register_blueprint(routes.users)
 app.register_blueprint(routes.mdmsite)
-app.register_blueprint(routes.snipeit)
+app.register_blueprint(routes.asset)
+app.register_blueprint(routes.device)
 
 if __name__ == "__main__":
     create_all()

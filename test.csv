@@ -1,0 +1,23 @@
+[
+  {
+    "api_token": "B34CA494-EE79-4026-AA26-19C9880DB6AC", 
+    "mdm_site_id": "4bbfceb3-bd9d-478b-8fd4-931296dbb0e4", 
+    "name": "production", 
+    "url": "https://mdm.devpipeline.org"
+  }, 
+  {
+    "api_token": "B34CA494-EE79-4026-AA26-19C9880DB6AC", 
+    "mdm_site_id": "cdffb672-bfbf-4245-acf2-93d13cc4f2f6", 
+    "name": "staging", 
+    "url": "https://mds.devpipeline.org:8443"
+  }
+]
+[
+  {
+    "api_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMDUxYWNlYTlmYjI1MmU4MzUyMzdkYjExZjFiYzMzYzMyMjE1ODIxNWI4MzhiYzk4NGMyNjg3MTVjMGM0Njg2YTFlNzdmMmM5YTE0YWIwM2IiLCJpYXQiOjE2NzA4MzE3NzcuMjMwNTIyLCJuYmYiOjE2NzA4MzE3NzcuMjMwNTM2LCJleHAiOjIzMDE5ODM3NzcuMjIxNTA4LCJzdWIiOiIxIiwic2NvcGVzIjpbXX0.OzwGt_WRvVAOdreM9Ef8cAz5meskQPfy0myQp4xNWpA2-69jIDI0QbYEnMWAMXPICdjGnWhLGFWTwGeqxhu3fyDrj1VSTgBfH8yaGh5sFMEr-MD9TYgJrqk2WK3Lsq33DNBtS7FuHLEI_xWip6bnX2lc6PyZO6d6ibDkbRjSOFZeWW3YiZC7GGWdJFBxc6WS_svsQMkrHnbLPBOUvoJigAnLrO721oqfbTlncVBpaJd7prCVwrgsuYg1aycMe9fWufdYjN3Ig5iHTV4hYk7dT4nCYTkADxa0ffsOkyltBgKF3amB_lgSJSJq2x1F80Cgar_CFxdjcpuPFqILqQOcOVgix5uGbNNBtRTVLnPufCmWAfu26zpBKyrBN5FFwokOwIF5WN8Ub3tk9AEqzhvAseI9WtVgA1aarrFem71TLL38AuJ0Vrojuf_KmUikAdSfvm9zKssMoToyOO8cZ-MG0YJdXe4hQTO023EAgpEK5sAzy9D3QGVZhK9zpPGDW_KjBFZf3WrvQT-kr9LysKYyhjn69ZRWxC57RkPWSm7raIJNH1PW-zrpttr8jkFvk9BVs_zCPpNdt2wc08foRKyfV6yYcc3-DZau5hx_JmiEl9oNUfgq3mOY38vnTln5O9YLD27L6qUwBd-h3DH9D6KOCIB2n1eY4T0bCTliXajoaYM", 
+    "name": "dp-snipeit", 
+    "org_id": "c7129d06-b02e-4aa8-80d8-4085be62b964", 
+    "site_id": "b56030fb-0006-427f-9289-5ef0651d8672", 
+    "url": "https://assets.devpipeline.org"
+  }
+]
