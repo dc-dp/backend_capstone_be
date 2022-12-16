@@ -1,27 +1,20 @@
-from datetime import datetime
 from flask import jsonify
 import flask
 from db import db, populate_object
 from models.snipe_it_site import SnipeItSite, snipeit_site_schema, snipeit_sites_schema
 import json
-from lib.authenticate import authenticate, authenticate_return_auth, validate_auth_token
-from util.foundation_utils import strip_phone
-from util.validate_uuid4 import validate_uuid4
+from lib.authenticate import authenticate, authenticate_return_auth
 import requests
-from models.assets import Assets
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
+from models.assets import Assets, assets_schema
 
 
-@authenticate
-def asset_add(req: flask.Request) -> flask.Response:
-    # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
-
+@authenticate_return_auth
+def asset_site_add(req: flask.Request, auth_info) -> flask.Response:
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")
     name = post_data.get("name")
-    org_id = post_data.get("org_id")
+    org_id = auth_info.user.org_id
 
     asset_site = SnipeItSite(api_token, url, name, org_id)
 
@@ -32,7 +25,7 @@ def asset_add(req: flask.Request) -> flask.Response:
 
 
 @authenticate_return_auth
-def asset_get_all(req: flask.Request, auth_info) -> flask.Response:
+def asset_site_get_all(req: flask.Request, auth_info) -> flask.Response:
     all_sites = []
     all_sites = (
         db.session.query(SnipeItSite)
@@ -44,30 +37,62 @@ def asset_get_all(req: flask.Request, auth_info) -> flask.Response:
 
 
 @authenticate_return_auth
-def asset_get_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+def assets_get_all(req: flask.Request, auth_info) -> flask.Response:
+    all_assets = []
+    all_assets = (
+        db.session.query(Assets)
+        .join(SnipeItSite)
+        .filter(
+            (SnipeItSite.site_id == Assets.site_id)
+            and (auth_info.user.org_id == SnipeItSite.org_id)
+        )
+        .order_by(Assets.asset_tag.asc())
+    ).all()
+
+    return jsonify(assets_schema.dump(all_assets))
+
+
+@authenticate_return_auth
+def asset_site_get_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
 
     site = (
         db.session.query(SnipeItSite)
         .filter(
-            (auth_info.user.org_id == SnipeItSite.org_id)
-            and (SnipeItSite.site_id == site_id)
+            (auth_info.user.org_id == SnipeItSite.org_id),
+            (SnipeItSite.site_id == site_id),
         )
-        .one()
+        .first()
     )
 
     return jsonify(snipeit_site_schema.dump(site))
 
 
-@authenticate_return_auth
-def asset_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+@authenticate
+def asset_site_delete(req: flask.Request, site_id) -> flask.Response:
 
     site = (
         db.session.query(SnipeItSite)
         .filter(
-            (auth_info.user.org_id == SnipeItSite.org_id)
-            and (SnipeItSite.site_id == site_id)
+            (SnipeItSite.site_id == site_id),
         )
-        .one()
+        .first()
+    )
+
+    db.session.delete(site)
+
+    return jsonify("Site Removed")
+
+
+@authenticate_return_auth
+def asset_site_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
+
+    site = (
+        db.session.query(SnipeItSite)
+        .filter(
+            (auth_info.user.org_id == SnipeItSite.org_id),
+            (SnipeItSite.site_id == site_id),
+        )
+        .first()
     )
 
     site = snipeit_site_schema.dump(site)
@@ -136,6 +161,35 @@ def asset_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
         count += 1
 
     return jsonify(f"Sucessfully synced {count} devices")
+
+
+@authenticate
+def asset_site_update(req: flask.Request) -> flask.Response:
+    post_data = req.get_json()
+    print(post_data)
+    site_id = post_data.get("site_id")
+    org_id = post_data.get("org_id")
+    if org_id == None:
+        return jsonify("ERROR: org_id missing"), 400
+    name = post_data.get("name")
+    url = post_data.get("url")
+    api_token = post_data.get("api_token")
+
+    # if active == None:
+    #     active = True
+
+    site_data = (
+        db.session.query(SnipeItSite).filter(SnipeItSite.site_id == site_id).first()
+    )
+    site_data.name = name
+    site_data.url = url
+    site_data.api_token = api_token
+
+    # site_data.active = active
+
+    db.session.commit()
+
+    return jsonify(snipeit_site_schema.dump(site_data)), 200
 
 
 # @authenticate_return_auth
@@ -292,35 +346,3 @@ def asset_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
 #         return organizations_schema.dump(org_data)
 
 #     return jsonify(organizations_schema.dump(org_data))
-
-
-# @authenticate
-# def organization_update(req: flask.Request) -> flask.Response:
-#     post_data = req.get_json()
-#     org_id = post_data.get("org_id")
-#     if org_id == None:
-#         return jsonify("ERROR: org_id missing"), 400
-#     name = post_data.get("name")
-#     address = post_data.get("address")
-#     city = post_data.get("city")
-#     state = post_data.get("state")
-#     zip_code = post_data.get("zip_code")
-#     phone = post_data.get("phone")
-#     active = post_data.get("active")
-#     if active == None:
-#         active = True
-
-#     org_data = (
-#         db.session.query(Organizations).filter(Organizations.org_id == org_id).first()
-#     )
-#     org_data.name = name
-#     org_data.address = address
-#     org_data.city = city
-#     org_data.state = state
-#     org_data.zip_code = zip_code
-#     org_data.phone = strip_phone(phone)
-#     org_data.active = active
-
-#     db.session.commit()
-
-#     return jsonify(organization_schema.dump(org_data)), 200

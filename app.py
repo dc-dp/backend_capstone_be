@@ -186,9 +186,10 @@ app.register_blueprint(routes.orgs)
 app.register_blueprint(routes.search)
 app.register_blueprint(routes.users)
 app.register_blueprint(routes.mdmsite)
-app.register_blueprint(routes.asset)
+app.register_blueprint(routes.assetsite)
 app.register_blueprint(routes.device)
+app.register_blueprint(routes.assets)
 
 if __name__ == "__main__":
     create_all()
-    app.run(debug=True, port=8086)
+    app.run(debug=True, port=8086, host="0.0.0.0")

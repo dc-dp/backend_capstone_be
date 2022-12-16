@@ -4,5 +4,6 @@ from .organization_routes import orgs
 from .search_routes import search
 from .user_routes import users
 from .mdm_site_routes import mdmsite
-from .asset_routes import asset
+from .asset_site_routes import assetsite
+from .asset_routes import assets
 from .enrolled_device_routes import device

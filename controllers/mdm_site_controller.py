@@ -15,15 +15,15 @@ from util.validate_uuid4 import validate_uuid4
 import requests
 
 
-@authenticate
-def mdmsite_add(req: flask.Request) -> flask.Response:
+@authenticate_return_auth
+def mdmsite_add(req: flask.Request, auth_info) -> flask.Response:
     # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
 
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")
     name = post_data.get("name")
-    org_id = post_data.get("org_id")
+    org_id = auth_info.user.org_id
 
     mdm_site = MdmSite(api_token, url, name, org_id)
 
@@ -35,8 +35,6 @@ def mdmsite_add(req: flask.Request) -> flask.Response:
 
 @authenticate_return_auth
 def mdmsite_get_all(req: flask.Request, auth_info) -> flask.Response:
-    # print(f"LOOK HERE: >>>>>>>>>>>> ({vars(auth_info)})")
-
     all_sites = []
     all_sites = (
         db.session.query(MdmSite).filter(auth_info.user.org_id == MdmSite.org_id).all()
@@ -51,7 +49,7 @@ def mdmsite_get_by_id(req: flask.Request, site_id, auth_info) -> flask.Response:
     site = (
         db.session.query(MdmSite)
         .filter(
-            (auth_info.user.org_id == MdmSite.org_id) and (MdmSite.site_id == site_id)
+            (auth_info.user.org_id == MdmSite.org_id), (MdmSite.mdm_site_id == site_id)
         )
         .one()
     )
@@ -108,6 +106,51 @@ def mdmsite_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response
         db.session.commit()
         count += 1
     return jsonify(f"Sucessfully synced {count} devices")
+
+
+@authenticate
+def mdm_site_update(req: flask.Request) -> flask.Response:
+    post_data = req.get_json()
+    print(post_data)
+    site_id = post_data.get("mdm_site_id")
+    org_id = post_data.get("org_id")
+    # if org_id == None:
+    # return jsonify("ERROR: org_id missing"), 400
+    name = post_data.get("name")
+    url = post_data.get("url")
+    api_token = post_data.get("api_token")
+
+    # if active == None:
+    #     active = True
+
+    site_data = db.session.query(MdmSite).filter(MdmSite.mdm_site_id == site_id).first()
+    print(site_data.name, site_data.url, site_data.api_token)
+    site_data.name = name
+    site_data.url = url
+    site_data.api_token = api_token
+    print(site_data.name, site_data.url, site_data.api_token)
+
+    # site_data.active = active
+
+    db.session.commit()
+
+    return jsonify(mdm_site_schema.dump(site_data)), 200
+
+
+@authenticate
+def mdm_site_delete(req: flask.Request, site_id) -> flask.Response:
+
+    site = (
+        db.session.query(MdmSite)
+        .filter(
+            (MdmSite.mdm_site_id == site_id),
+        )
+        .first()
+    )
+
+    db.session.delete(site)
+
+    return jsonify("Site Removed")
 
 
 # @authenticate_return_auth

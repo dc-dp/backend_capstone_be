@@ -17,3 +17,8 @@ def enrolled_devices_get() -> Response:
 @device.route("/devices/sync_all", methods=["GET"])
 def device_sync_all() -> Response:
     return controllers.enrolled_devices_sync(request)
+
+
+@device.route("/devices/dep_sync", methods=["GET"])
+def sync_apple_dep() -> Response:
+    return controllers.sync_apple_dep(request)

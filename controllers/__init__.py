@@ -38,6 +38,7 @@ from .enrolled_devices_controller import (
     enrolled_devices_get,
     enrolled_devices_sync,
     # enrolled_device_get_by_id,
+    sync_apple_dep,
 )
 
 from .mdm_site_controller import (
@@ -45,10 +46,15 @@ from .mdm_site_controller import (
     mdmsite_get_all,
     mdmsite_get_by_id,
     mdmsite_sync_by_id,
+    mdm_site_update,
+    mdm_site_delete,
 )
 from .asset_controller import (
-    asset_add,
-    asset_get_all,
-    asset_get_by_id,
-    asset_sync_by_id,
+    asset_site_add,
+    asset_site_get_all,
+    asset_site_get_by_id,
+    asset_site_sync_by_id,
+    assets_get_all,
+    asset_site_update,
+    asset_site_delete,
 )

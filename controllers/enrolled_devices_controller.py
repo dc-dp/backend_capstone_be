@@ -17,13 +17,14 @@ from lib.authenticate import authenticate, authenticate_return_auth, validate_au
 from util.foundation_utils import strip_phone
 from util.validate_uuid4 import validate_uuid4
 from controllers.mdm_site_controller import mdmsite_get_all, mdmsite_sync_by_id
-from controllers.asset_controller import asset_get_all, asset_sync_by_id
+from controllers.asset_controller import asset_site_get_all, asset_site_sync_by_id
+import requests
 
 
 @authenticate_return_auth
 def enrolled_devices_sync(req: flask.Request, auth_info) -> flask.Response:
     all_mdm_sites = mdmsite_get_all(req, auth_info=auth_info)
-    all_asset_sites = asset_get_all(req, auth_info=auth_info)
+    all_asset_sites = asset_site_get_all(req, auth_info=auth_info)
 
     mdm_site = all_mdm_sites.get_json("response")
     asset_site = all_asset_sites.get_json("response")
@@ -33,7 +34,7 @@ def enrolled_devices_sync(req: flask.Request, auth_info) -> flask.Response:
 
     for site in asset_site:
         site_id = site["site_id"]
-        asset_sync_by_id(req, site_id, auth_info=auth_info)
+        asset_site_sync_by_id(req, site_id, auth_info=auth_info)
 
     return jsonify("Sites Synced Successully")
 
@@ -49,6 +50,28 @@ def enrolled_devices_get(req: flask.Request, auth_info) -> flask.Response:
     )
 
     return jsonify(enrolled_devices_schema.dump(all_devices))
+
+
+@authenticate_return_auth
+def sync_apple_dep(req: flask.Request, auth_info) -> flask.Response:
+    all_mdm_sites = []
+    all_mdm_sites = mdmsite_get_all(req, auth_info=auth_info)
+    mdm_sites = all_mdm_sites.get_json("response")
+
+    sync_result = []
+    for site in mdm_sites:
+        post_url = f"{site['url']}/v1/dep/syncnow"
+        auth_info = ("micromdm", site["api_token"])
+        header = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        sync_result.append(
+            f"Site ID: {site['mdm_site_id']}, Status Code: {requests.post(post_url, headers=header, auth=auth_info).status_code}"
+        )
+
+    print(sync_result)
+
+    return jsonify(sync_result)
 
 
 # @authenticate_return_auth
