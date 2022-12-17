@@ -26,10 +26,13 @@ def asset_site_add(req: flask.Request, auth_info) -> flask.Response:
 
 @authenticate_return_auth
 def asset_site_get_all(req: flask.Request, auth_info) -> flask.Response:
+
     all_sites = []
     all_sites = (
         db.session.query(SnipeItSite)
-        .filter(auth_info.user.org_id == SnipeItSite.org_id)
+        .filter(
+            auth_info.user.org_id == SnipeItSite.org_id,
+        )
         .all()
     )
 
@@ -43,8 +46,8 @@ def assets_get_all(req: flask.Request, auth_info) -> flask.Response:
         db.session.query(Assets)
         .join(SnipeItSite)
         .filter(
-            (SnipeItSite.site_id == Assets.site_id)
-            and (auth_info.user.org_id == SnipeItSite.org_id)
+            (SnipeItSite.site_id == Assets.site_id),
+            (auth_info.user.org_id == SnipeItSite.org_id),
         )
         .order_by(Assets.asset_tag.asc())
     ).all()
@@ -79,7 +82,7 @@ def asset_site_delete(req: flask.Request, site_id) -> flask.Response:
     )
 
     db.session.delete(site)
-
+    db.session.commit()
     return jsonify("Site Removed")
 
 

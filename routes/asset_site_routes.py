@@ -29,7 +29,7 @@ def asset_site_sync_by_id(asset_id) -> Response:
     return controllers.asset_site_sync_by_id(request, asset_id)
 
 
-@assetsite.route("/asset_site/delete/<asset_id>", methods=["DELETE"])
+@assetsite.route("/asset_site/del/<asset_id>", methods=["DELETE"])
 def asset_site_delete(asset_id) -> Response:
     return controllers.asset_site_delete(request, asset_id)
 

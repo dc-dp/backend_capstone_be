@@ -29,9 +29,9 @@ def mdmsite_update() -> Response:
     return controllers.mdm_site_update(request)
 
 
-@mdmsite.route("/mdmsite/delete/<mdmsite_id>", methods=["DELETE"])
-def mdmsite_delete(mdmsite_id) -> Response:
-    return controllers.mdmsite_delete(request, mdmsite_id)
+@mdmsite.route("/mdmsite/del/<mdm_site_id>", methods=["DELETE"])
+def mdmsite_delete(mdm_site_id) -> Response:
+    return controllers.mdm_site_delete(request, mdm_site_id)
 
 
 # @mdmsite.route("/mdmsite/activate/<mdmsite_id>", methods=["PUT"])

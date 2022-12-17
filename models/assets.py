@@ -3,6 +3,8 @@ import uuid
 from db import db
 import marshmallow as ma
 
+# from models.enrolled_devices import EnrolledDevicesSchema
+
 
 class Assets(db.Model):
     __tablename__ = "Assets"
@@ -25,6 +27,12 @@ class Assets(db.Model):
     deployed = db.Column(db.Boolean())
     assigned_to = db.Column(db.String())
     asset_tag = db.Column(db.Integer())
+    enrolled = db.relationship(
+        "EnrolledDevices",
+        back_populates="asset",
+        lazy=True
+        # primaryjoin="EnrolledDevices.serial_number==Assets.serial_number",
+    )
 
     def __init__(
         self,
@@ -58,7 +66,11 @@ class AssetsSchema(ma.Schema):
             "deployed",
             "assigned_to",
             "asset_tag",
+            "enrolled",
         ]
+
+    # this isnt working. other direction works fine
+    enrolled = ma.fields.Nested("EnrolledDevicesSchema", only=["enrollment_status"])
 
 
 asset_schema = AssetsSchema()

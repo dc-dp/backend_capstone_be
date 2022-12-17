@@ -4,6 +4,8 @@ from datetime import datetime
 from db import db
 import marshmallow as ma
 
+# from models.assets import AssetsSchema
+
 
 class EnrolledDevices(db.Model):
     __tablename__ = "EnrolledDevices"
@@ -16,13 +18,20 @@ class EnrolledDevices(db.Model):
     )
     serial_number = db.Column(
         db.String(),
-        # db.ForeignKey("Assets.serial_number"),
+        db.ForeignKey("Assets.serial_number"),
         nullable=False,
         unique=True,
     )
     enrollment_status = db.Column(db.Boolean())
     last_seen = db.Column(db.String())
     dep_profile_status = db.Column(db.String())
+
+    asset = db.relationship(
+        "Assets",
+        back_populates="enrolled",
+        lazy=True
+        # primaryjoin="EnrolledDevices.serial_number==Assets.serial_number",
+    )
 
     def __init__(
         self, device_id, serial_number, enrollment_status, last_seen, dep_profile_status
@@ -39,10 +48,13 @@ class EnrolledDevicesSchema(ma.Schema):
         fields = [
             "device_id",
             "serial_number",
+            "asset",
             "enrollment_status",
             "last_seen",
             "dep_profile_status",
         ]
+
+    asset = ma.fields.Nested("AssetsSchema", only=["asset_tag", "assigned_to"])
 
 
 enrolled_device_schema = EnrolledDevicesSchema()

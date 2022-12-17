@@ -17,8 +17,6 @@ import requests
 
 @authenticate_return_auth
 def mdmsite_add(req: flask.Request, auth_info) -> flask.Response:
-    # I need to build a function I can call with the MDM Site info (url, api_token, that will let me sync devices based on that info.)
-
     post_data = req.get_json()
     api_token = post_data.get("api_token")
     url = post_data.get("url")
@@ -113,24 +111,15 @@ def mdm_site_update(req: flask.Request) -> flask.Response:
     post_data = req.get_json()
     print(post_data)
     site_id = post_data.get("mdm_site_id")
-    org_id = post_data.get("org_id")
-    # if org_id == None:
-    # return jsonify("ERROR: org_id missing"), 400
     name = post_data.get("name")
     url = post_data.get("url")
     api_token = post_data.get("api_token")
 
-    # if active == None:
-    #     active = True
-
     site_data = db.session.query(MdmSite).filter(MdmSite.mdm_site_id == site_id).first()
-    print(site_data.name, site_data.url, site_data.api_token)
+
     site_data.name = name
     site_data.url = url
     site_data.api_token = api_token
-    print(site_data.name, site_data.url, site_data.api_token)
-
-    # site_data.active = active
 
     db.session.commit()
 
@@ -138,17 +127,18 @@ def mdm_site_update(req: flask.Request) -> flask.Response:
 
 
 @authenticate
-def mdm_site_delete(req: flask.Request, site_id) -> flask.Response:
+def mdm_site_delete(req: flask.Request, mdm_site_id) -> flask.Response:
+    # post_data = req.get_json()
 
-    site = (
-        db.session.query(MdmSite)
-        .filter(
-            (MdmSite.mdm_site_id == site_id),
-        )
-        .first()
+    # site_id = post_data.get("mdm_site_id")
+
+    # print(f"LOOK>>>>>>>>{post_data}")
+    site_data = (
+        db.session.query(MdmSite).filter(MdmSite.mdm_site_id == mdm_site_id).first()
     )
 
-    db.session.delete(site)
+    db.session.delete(site_data)
+    db.session.commit()
 
     return jsonify("Site Removed")
 

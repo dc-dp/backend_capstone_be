@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import jsonify
 import json
 import flask
+from time import sleep
 from db import db
 from models.enrolled_devices import (
     EnrolledDevices,
@@ -23,18 +24,20 @@ import requests
 
 @authenticate_return_auth
 def enrolled_devices_sync(req: flask.Request, auth_info) -> flask.Response:
-    all_mdm_sites = mdmsite_get_all(req, auth_info=auth_info)
     all_asset_sites = asset_site_get_all(req, auth_info=auth_info)
-
-    mdm_site = all_mdm_sites.get_json("response")
     asset_site = all_asset_sites.get_json("response")
+    for site in asset_site:
+        site_id = site["site_id"]
+        asset_site_sync_by_id(req, site_id, auth_info=auth_info)
+
+    # sleep(3)
+    all_mdm_sites = mdmsite_get_all(req, auth_info=auth_info)
+    mdm_site = all_mdm_sites.get_json("response")
     for site in mdm_site:
         site_id = site["mdm_site_id"]
         mdmsite_sync_by_id(req, site_id, auth_info=auth_info)
 
-    for site in asset_site:
-        site_id = site["site_id"]
-        asset_site_sync_by_id(req, site_id, auth_info=auth_info)
+    # sleep(3)
 
     return jsonify("Sites Synced Successully")
 
@@ -45,7 +48,7 @@ def enrolled_devices_get(req: flask.Request, auth_info) -> flask.Response:
 
     all_devices = (
         db.session.query(EnrolledDevices)
-        .order_by(EnrolledDevices.serial_number.asc())
+        .order_by(EnrolledDevices.last_seen.desc())
         .all()
     )
 
