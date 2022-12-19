@@ -115,6 +115,7 @@ def asset_site_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Respo
     with open("assets.json", "w") as outfile:
         json.dump(assets_json, outfile)
     count = 0
+    serials = {}
     for asset in assets_json:
         if not asset["manufacturer"]:
             continue
@@ -136,6 +137,7 @@ def asset_site_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Respo
             ),
             "site_id": site_id,
         }
+        serials[f"{new_asset['serial_number']}"] = f"{new_asset['assigned_to']}"
         if not asset["assigned_to"]["first_name"]:
             new_asset["assigned_to"] = ""
         existing = (
@@ -162,8 +164,8 @@ def asset_site_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Respo
             )
         db.session.commit()
         count += 1
-
-    return jsonify(f"Sucessfully synced {count} devices")
+    return serials
+    # return jsonify(f"Sucessfully synced {count} devices")
 
 
 @authenticate

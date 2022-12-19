@@ -79,9 +79,10 @@ def mdmsite_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response
     )
     device_json = devices.json()["devices"]
     count = 0
+    serials = []
     for device in device_json:
-        print(f"DEVICE JSON: {device_json}")
         device["device_id"] = device.pop("udid")
+        serials.append(device["serial_number"].upper())
         existing = (
             db.session.query(EnrolledDevices)
             .filter(EnrolledDevices.serial_number == device["serial_number"])
@@ -103,7 +104,9 @@ def mdmsite_sync_by_id(req: flask.Request, site_id, auth_info) -> flask.Response
             )
         db.session.commit()
         count += 1
-    return jsonify(f"Sucessfully synced {count} devices")
+
+    return serials
+    # return jsonify(f"Sucessfully synced {count} devices")
 
 
 @authenticate
